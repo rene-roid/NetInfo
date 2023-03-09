@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using SimpleWifi;
+using System.Management;
 
 namespace NetSpy
 {
@@ -17,7 +13,10 @@ namespace NetSpy
         // IP address of the host
         public static string GetLocalIpAddress()
         {
-            string value = string.Empty;
+            string value = "No Ipv4 address found";
+
+            // Bruh, teacher doesn't like this code 💀
+            /*
             foreach (NetworkInterface nic in NetworkInterface.GetAllNetworkInterfaces())
             {
                 IPInterfaceProperties ip = nic.GetIPProperties();
@@ -47,6 +46,28 @@ namespace NetSpy
             if (value == string.Empty)
             {
                 value = "No network adapters with an IPv4 address in the system!";
+            }
+            */
+            // Bruh, teacher doesn't like this code 💀
+
+            NetworkInterface[] nics = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface adapter in nics)
+            {
+                if (adapter.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
+                    adapter.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+                {
+                    if (adapter.OperationalStatus == OperationalStatus.Up)
+                    {
+                        IPInterfaceProperties properties = adapter.GetIPProperties();
+                        foreach (UnicastIPAddressInformation address in properties.UnicastAddresses)
+                        {
+                            if (address.Address.AddressFamily == AddressFamily.InterNetwork)
+                            {
+                                value = address.Address.ToString();
+                            }
+                        }
+                    }
+                }
             }
 
             return value;
@@ -80,7 +101,7 @@ namespace NetSpy
             if (currentConnection != WifiStatus.Connected)
                 return "Not connected to a WiFi network";
 
-            System.Diagnostics.Process p = new System.Diagnostics.Process();
+            System.Diagnostics.Process p = new Process();
             p.StartInfo.FileName = "netsh.exe";
             p.StartInfo.Arguments = "wlan show interfaces";
             p.StartInfo.UseShellExecute = false;
@@ -198,19 +219,41 @@ namespace NetSpy
         // Name of the OS
         public static string GetOSName()
         {
-            return Environment.OSVersion.ToString();
+            return System.Net.Dns.GetHostName();
         }
 
         // Is VirtualBox installed?
         public static string VirtualBoxInstalled()
         {
-            if (File.Exists("C:\\Program Files\\Oracle\\VirtualBox\\VBoxManage.exe"))
+            // Find VBoxManage.exe in the computer
+            string[] files = Directory.GetFiles(@"C:\Program Files\Oracle\VirtualBox", "VBoxManage.exe", SearchOption.AllDirectories);
+
+            if (files.Length > 0)
             {
-                return "Yes";
+                return "Installed";
             }
             else
             {
+                return "Not installed";
+            }
+        }
+
+        // Teacher does not like this 💀
+        private string Vbox()
+        {
+            // Create a query for Win32_Product class with a filter by name
+            string query = "SELECT * FROM Win32_Product WHERE Name LIKE '%VirtualBox%'";
+
+            // Execute the query and get the result collection
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+            ManagementObjectCollection programs = searcher.Get();
+
+            // If the result collection is not empty, VirtualBox is installed
+            if (programs.Count == 0)
                 return "No";
+            else
+            {
+                return "Yes";
             }
         }
 

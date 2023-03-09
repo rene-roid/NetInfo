@@ -128,7 +128,7 @@
             // 
             hostname.AutoSize = true;
             hostname.Font = new Font("Segoe UI", 10.8F, FontStyle.Regular, GraphicsUnit.Point);
-            hostname.Location = new Point(389, 167);
+            hostname.Location = new Point(391, 167);
             hostname.Name = "hostname";
             hostname.Size = new Size(98, 25);
             hostname.TabIndex = 8;
